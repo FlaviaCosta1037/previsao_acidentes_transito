@@ -1,4 +1,5 @@
 import re
+import numpy as np
 import pandas as pd
 from src.funcoes_eda import classificar_turno
 from wordcloud import WordCloud
@@ -25,19 +26,14 @@ def tratamento(df):
 
 def extrair_hora(valor):
     if pd.isna(valor):
-        return None
+        return np.nan
     if isinstance(valor, str):
         valor = valor.strip()
-        match = re.match(r'^(\d{1,2})', valor)  
+        match = re.match(r'^(\d{1,2})', str(valor))  
         if match:
-            return int(match.group(1))
-        else:
-            return None
-    elif isinstance(valor, (int, float)):
-        return int(valor)
-    return None
-
-
+            h = int(match.group(1))
+            return h if 0 <= h <= 23 else np.nan
+    return np.nan
 
 def limpar_descricao(texto):
 

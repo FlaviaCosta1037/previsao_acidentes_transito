@@ -10,9 +10,11 @@ import {
   Legend,
   PointElement,
 } from 'chart.js';
+import { MatrixController, MatrixElement } from 'chartjs-chart-matrix';
+
 
 import { collection, getDocs, addDoc, query, orderBy, where } from 'firebase/firestore';
-import { db } from './firebaseConfig'; // seu arquivo firebaseConfig.js
+import { db } from './firebaseConfig'; 
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -24,7 +26,9 @@ Chart.register(
   Title,
   Tooltip,
   Legend,
-  PointElement
+  PointElement,
+  MatrixController,
+  MatrixElement
 );
 
 function App() {
@@ -42,8 +46,10 @@ function App() {
     tipo: useRef(null),
     natureza: useRef(null),
     veiculos: useRef(null),
+    heatmap: useRef(null),
   };
 
+  // Instâncias dos gráficos para destruir antes de criar novos
   const instances = {
     ano: useRef(null),
     dia: useRef(null),
@@ -52,8 +58,10 @@ function App() {
     tipo: useRef(null),
     natureza: useRef(null),
     veiculos: useRef(null),
+    heatmap: useRef(null),
   };
 
+  // Carrega histórico de previsões do Firestore
   async function carregarPrevisoesFirestore() {
     try {
       const q = query(collection(db, 'previsoes'), orderBy('data', 'desc'));
@@ -69,6 +77,7 @@ function App() {
     }
   }
 
+  // Função para verificar se já existe previsão para o próximo dia
   async function existePrevisaoParaData(dataStr) {
     const previsoesRef = collection(db, 'previsoes');
     const q = query(previsoesRef, where('data', '==', dataStr));
@@ -76,6 +85,7 @@ function App() {
     return !snapshot.empty;
   }
 
+  // Cria gráfico (função genérica)
   function criarGrafico(ref, instanceRef, tipo, labels, dados, label, cor) {
     if (instanceRef.current) instanceRef.current.destroy();
     instanceRef.current = new Chart(ref.current, {
@@ -98,7 +108,105 @@ function App() {
       },
     });
   }
-
+  function criarHeatmap(ref, instanceRef, data, dias, turnos) {
+    if (instanceRef.current) instanceRef.current.destroy();
+  
+    const matrixData = data.flatMap((row, y) =>
+      row.map((value, x) => ({
+        x: turnos[x],
+        y: dias[y],
+        v: value,
+      }))
+    );
+  
+    instanceRef.current = new Chart(ref.current, {
+      type: 'matrix',
+      data: {
+        datasets: [
+          {
+            label: 'Acidentes por Turno e Dia da Semana',
+            data: matrixData,
+            backgroundColor: (ctx) => {
+              const value = ctx.raw.v;
+              const max = Math.max(...data.flat());
+              const lightness = 90 - 50 * (value / max); // Azul claro -> escuro
+              return `hsl(210, 100%, ${lightness}%)`;
+            },
+            width: (ctx) => {
+              const chartArea = ctx.chart.chartArea;
+              if (!chartArea) return 40;
+              const width = (chartArea.right - chartArea.left) / turnos.length - 4;
+              return Math.min(width, 80);
+            },
+            height: (ctx) => {
+              const chartArea = ctx.chart.chartArea;
+              if (!chartArea) return 40;
+              const height = (chartArea.bottom - chartArea.top) / dias.length - 4;
+              return Math.min(height, 40);
+            },
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: {
+          padding: {
+            top: 40,
+            bottom: 10,
+            left: 10,
+            right: 10,
+          },
+        },
+        scales: {
+          x: {
+            type: 'category',
+            labels: turnos,
+            position: 'top',
+            title: { display: true, padding: 10 },
+            ticks: {
+              maxRotation: 0,
+              minRotation: 0,
+              autoSkip: false,
+              align: 'center',
+              padding: 10,
+              font: { size: 12 },
+            },
+            grid: {
+              drawOnChartArea: false,
+            },
+          },
+          y: {
+            type: 'category',
+            labels: dias,
+            title: { display: true, padding: 10 },
+            ticks: {
+              font: { size: 12 },
+              padding: 5,
+            },
+            grid: {
+              drawOnChartArea: false,
+            },
+          },
+        },
+        plugins: {
+          tooltip: {
+            callbacks: {
+              title: (ctx) => `${ctx[0].raw.y} - ${ctx[0].raw.x}`,
+              label: (ctx) => `Acidentes: ${ctx.raw.v}`,
+            },
+          },
+          legend: { display: false },
+          title: {
+            display: true,
+            text: 'Mapa de Calor: Acidentes por Turno e Dia da Semana',
+            font: { size: 16, weight: 'bold' },
+            padding: { top: 10, bottom: 10 },
+          },
+        },
+      },
+    });
+  }  
   useEffect(() => {
     carregarPrevisoesFirestore();
   }, []);
@@ -111,7 +219,9 @@ function App() {
         const dados = await res.json();
 
         setDadosGraficos(dados);
+        console.log('dados heatmap', dados.heatmap_turno, dados.heatmap_turno_dias, dados.heatmap_turno_turnos);
 
+        // Gráficos
         criarGrafico(refs.ano, instances.ano, 'bar', dados.acidentes_ano.anos, dados.acidentes_ano.valores, 'Acidentes por Ano', 'rgba(54, 162, 235, 0.8)');
         criarGrafico(refs.dia, instances.dia, 'bar', dados.acidentes_dia.dias, dados.acidentes_dia.valores, 'Acidentes por Dia da Semana', 'rgba(75, 192, 192, 0.8)');
         criarGrafico(refs.bairros, instances.bairros, 'bar', dados.top_bairros.bairros, dados.top_bairros.valores, 'Top 10 Bairros', 'rgba(255, 159, 64, 0.8)');
@@ -119,7 +229,18 @@ function App() {
         criarGrafico(refs.tipo, instances.tipo, 'bar', dados.tipo.tipos, dados.tipo.valores, 'Tipos de Acidente', 'rgba(255, 99, 132, 0.8)');
         criarGrafico(refs.natureza, instances.natureza, 'bar', dados.natureza.naturezas, dados.natureza.valores, 'Natureza dos Acidentes', 'rgba(255, 206, 86, 0.8)');
         criarGrafico(refs.veiculos, instances.veiculos, 'bar', dados.veiculos.tipos, dados.veiculos.valores, 'Tipos de Veículos Envolvidos', 'rgba(54, 162, 235, 0.8)');
+        criarHeatmap(
+          refs.heatmap,
+          instances.heatmap,
+          dados.heatmap_turno,
+          dados.heatmap_turno_dias,
+          dados.heatmap_turno_turnos
+        );
+        console.log('Heatmap - dias:', dados.heatmap_turno_dias);
+        console.log('Heatmap - turnos:', dados.heatmap_turno_turnos);
+        console.log('Heatmap - matriz:', dados.heatmap_turno);
 
+        // Previsão do próximo dia
         const resPrevisao = await fetch('http://127.0.0.1:5000/api/previsao');
         if (!resPrevisao.ok) throw new Error('Erro ao buscar previsão');
         const dadosPrevisao = await resPrevisao.json();
@@ -135,6 +256,7 @@ function App() {
 
         setPrevisaoProximoDia(dadosPrevisao.previsao_proximo_dia);
 
+        // Só salva se ainda não existir previsão para amanhã no Firestore
         const existe = await existePrevisaoParaData(amanhaStr);
         if (!existe) {
           await addDoc(collection(db, 'previsoes'), {
@@ -153,6 +275,7 @@ function App() {
     fetchData();
   }, []);
 
+  // Alterna modo escuro
   function toggleDarkMode() {
     setDarkMode(!darkMode);
   }
@@ -177,6 +300,7 @@ function App() {
         </div>
       )}
 
+      {/* Todos os gráficos */}
       <div className="row">
         <div className="col-md-6 mb-4">
           <canvas ref={refs.ano} />
@@ -199,8 +323,12 @@ function App() {
         <div className="col-md-6 mb-4">
           <canvas ref={refs.veiculos} />
         </div>
+        <div className="col-12 mb-4">
+          <canvas ref={refs.heatmap}style={{ height: '400px' }} />
+        </div>       
       </div>
-
+      
+      {/* Tabela de histórico */}
       <h3>Histórico de Previsões</h3>
       <table className={`table table-striped table-bordered ${darkMode ? 'table-dark' : ''}`}>
         <thead className={darkMode ? 'table-secondary' : 'table-light'}>
