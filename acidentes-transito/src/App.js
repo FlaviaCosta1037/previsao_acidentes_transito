@@ -281,73 +281,82 @@ function App() {
   }
 
   return (
-    <div className={`container py-4 ${darkMode ? 'bg-dark text-light' : ''}`}>
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h1>Previsão Acidentes de Trânsito</h1>
+    <div className={`container-fluid py-4 ${darkMode ? 'bg-dark text-light' : 'bg-light'}`}>
+      <div className="text-center mb-4">
+        <h1 className="display-5 fw-bold">📊 Previsão de Acidentes de Trânsito</h1>
         <button
-          className={`btn btn-${darkMode ? 'light' : 'dark'}`}
+          className={`btn btn-${darkMode ? 'outline-light' : 'dark'} mt-2`}
           onClick={toggleDarkMode}
         >
-          {darkMode ? 'Modo Claro' : 'Modo Escuro'}
+          {darkMode ? '🌞 Modo Claro' : '🌙 Modo Escuro'}
         </button>
       </div>
-
+  
       {error && <div className="alert alert-danger text-center">{error}</div>}
-
+  
       {previsaoProximoDia && !error && (
-        <div className="alert alert-info text-center">
-          Previsão de acidentes para o próximo dia: <strong>{previsaoProximoDia}</strong>
+        <div className="alert alert-info text-center fs-5">
+          📅 Previsão de acidentes para o próximo dia: <strong>{previsaoProximoDia}</strong>
         </div>
       )}
-
-      {/* Todos os gráficos */}
+  
       <div className="row">
-        <div className="col-md-6 mb-4">
-          <canvas ref={refs.ano} />
+        {/* Gráficos em cards */}
+        {[
+          { ref: refs.ano, label: "Acidentes por Ano" },
+          { ref: refs.dia, label: "Acidentes por Dia da Semana" },
+          { ref: refs.bairros, label: "Top 10 Bairros" },
+          { ref: refs.hora, label: "Acidentes por Hora do Dia" },
+          { ref: refs.tipo, label: "Tipos de Acidente" },
+          { ref: refs.natureza, label: "Natureza dos Acidentes" },
+          { ref: refs.veiculos, label: "Tipos de Veículos Envolvidos" },
+        ].map((item, idx) => (
+          <div key={idx} className="col-md-6 mb-4">
+            <div className={`card shadow-sm h-100 ${darkMode ? 'bg-secondary text-light' : ''}`}>
+              <div className="card-body">
+                <div className="ratio ratio-4x3">
+                  <canvas ref={item.ref} />
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+        {/* Heatmap em destaque */}
+        <div className="col-12 mb-5">
+          <div className={`card shadow border-0 ${darkMode ? 'bg-secondary text-light' : ''}`}>
+            <div className="card-header fs-5 fw-semibold">
+              🔥 Mapa de Calor: Acidentes por Turno e Dia da Semana
+            </div>
+            <div className="card-body">
+              <canvas ref={refs.heatmap} style={{ height: '400px' }} />
+            </div>
+          </div>
         </div>
-        <div className="col-md-6 mb-4">
-          <canvas ref={refs.dia} />
-        </div>
-        <div className="col-md-6 mb-4">
-          <canvas ref={refs.bairros} />
-        </div>
-        <div className="col-md-6 mb-4">
-          <canvas ref={refs.hora} />
-        </div>
-        <div className="col-md-6 mb-4">
-          <canvas ref={refs.tipo} />
-        </div>
-        <div className="col-md-6 mb-4">
-          <canvas ref={refs.natureza} />
-        </div>
-        <div className="col-md-6 mb-4">
-          <canvas ref={refs.veiculos} />
-        </div>
-        <div className="col-12 mb-4">
-          <canvas ref={refs.heatmap}style={{ height: '400px' }} />
-        </div>       
       </div>
-      
-      {/* Tabela de histórico */}
-      <h3>Histórico de Previsões</h3>
-      <table className={`table table-striped table-bordered ${darkMode ? 'table-dark' : ''}`}>
-        <thead className={darkMode ? 'table-secondary' : 'table-light'}>
-          <tr>
-            <th>Data</th>
-            <th>Previsão de Acidentes</th>
-          </tr>
-        </thead>
-        <tbody>
-          {previsoesHistorico.map((item) => (
-            <tr key={item.id}>
-              <td>{item.data}</td>
-              <td>{item.previsao}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+  
+      {/* Histórico de Previsões */}
+      <div className="mb-5">
+        <h3 className="mb-3">📚 Histórico de Previsões</h3>
+        <div className="table-responsive">
+          <table className={`table table-hover table-bordered ${darkMode ? 'table-dark' : ''}`}>
+            <thead className={darkMode ? 'table-secondary' : 'table-light'}>
+              <tr>
+                <th>Data</th>
+                <th>Previsão de Acidentes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {previsoesHistorico.map((item) => (
+                <tr key={item.id}>
+                  <td>{item.data}</td>
+                  <td>{item.previsao}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
-  );
+  );  
 }
-
 export default App;
