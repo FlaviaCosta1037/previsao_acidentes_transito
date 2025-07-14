@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from flask_cors import CORS
 from src.carga_dados import carregar_dados
-from src.modelo_arima import preparar_modelo_arima
+from src.preparar_modelo import preparar_modelo_sarima, preparar_modelo_arima
 from src.dados_grafico import preparar_dados_graficos
 from src.utils import limpar_descricao, extrair_hora
 
@@ -21,8 +21,8 @@ df['hora_limpa'] = df['hora'].apply(extrair_hora)
 dados_graficos = preparar_dados_graficos(df)
 
 # Treina o modelo ARIMA e guarda para usar depois
-resultados_arima = preparar_modelo_arima(df)
-modelo_arima = resultados_arima['modelo']
+resultados_sarima = preparar_modelo_sarima(df)
+modelo_sarima = resultados_sarima['modelo']
 
 # Função auxiliar para garantir que numpy int64 viram int normais para jsonify
 def convert_np(obj):
@@ -42,11 +42,23 @@ def convert_np(obj):
 def previsao():
     try:
         # Previsão para o próximo dia (1 período à frente)
-        pred = modelo_arima.predict(n_periods=1)[0]
+        pred = modelo_sarima.forecast(steps=1)[0]
         pred_float = round(float(pred), 2)
         return jsonify({'previsao_proximo_dia': pred_float})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/avaliacao')
+def avaliacao():
+    try:
+        resultados = {
+            'mape_val': round(resultados_sarima['mape_val'], 2),
+            'mape_test': round(resultados_sarima['mape_test'], 2),
+        }
+        return jsonify(resultados)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 @app.route('/api/graficos')
 def graficos():
