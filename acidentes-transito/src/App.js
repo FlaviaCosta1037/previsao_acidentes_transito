@@ -11,7 +11,7 @@ import {
   PointElement,
 } from 'chart.js';
 import { MatrixController, MatrixElement } from 'chartjs-chart-matrix';
-import { collection, getDocs, addDoc, query, orderBy, where } from 'firebase/firestore';
+import { collection, getDocs, addDoc, query, orderBy } from 'firebase/firestore';
 import { db } from './firebaseConfig';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -71,13 +71,6 @@ function App() {
       console.error('Erro ao carregar previsões do Firestore:', e);
       setError('Erro ao carregar previsões salvas');
     }
-  }
-
-  async function existePrevisaoParaData(dataStr) {
-    const previsoesRef = collection(db, 'previsoes');
-    const q = query(previsoesRef, where('data', '==', dataStr));
-    const snapshot = await getDocs(q);
-    return !snapshot.empty;
   }
 
   function getChartOptions(darkMode) {
@@ -176,7 +169,7 @@ function App() {
             autoSkip: false,
             align: 'center',
             padding: 10,
-            font: { size: 12 },
+            font: { size: 12, weight: 'bold' },
             color: darkMode ? 'white' : 'black' },
             grid: { drawOnChartArea: false },
           },
@@ -226,20 +219,30 @@ function App() {
           return;
         }
 
-        const amanha = new Date();
-        amanha.setDate(amanha.getDate() + 1);
-        const amanhaStr = amanha.toISOString().split('T')[0];
         setPrevisaoProximoDia(dadosPrevisao.previsao_proximo_dia);
 
-        const existe = await existePrevisaoParaData(amanhaStr);
-        if (!existe) {
-          await addDoc(collection(db, 'previsoes'), {
-            data: amanhaStr,
-            previsao: dadosPrevisao.previsao_proximo_dia,
-            createdAt: new Date(),
-          });
+        const q = query(collection(db, 'previsoes'), orderBy('data', 'desc'));
+        const snapshot = await getDocs(q);
+        const previsoes = [];
+        snapshot.forEach(doc => previsoes.push({ id: doc.id, ...doc.data() }));
+
+        setPrevisoesHistorico(previsoes);
+
+        const dataUltimaPrevisao = previsoes.length > 0 ? new Date(previsoes[0].data) : null;
+        const hoje = new Date();
+        const diffDias = dataUltimaPrevisao ? Math.floor((hoje - dataUltimaPrevisao) / (1000 * 60 * 60 * 24)) : 999;
+        if (diffDias >= 12) {
+          const novasPrevisoes = dadosPrevisao.previsoes_proximos_12_dias; // ← do backend
+          for (let i = 0; i < novasPrevisoes.length; i++) {
+            await addDoc(collection(db, 'previsoes'), {
+              data: novasPrevisoes[i].data,
+              previsao: novasPrevisoes[i].valor,
+              createdAt: new Date(),
+            });
+          }
           carregarPrevisoesFirestore();
         }
+
       } catch (e) {
         console.error('Erro:', e);
         setError(e.message);
