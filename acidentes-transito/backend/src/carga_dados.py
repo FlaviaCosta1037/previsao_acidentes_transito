@@ -4,7 +4,7 @@ from src.utils import tratar_dados
 
 def carregar_dados():
     dados = {}
-    pasta = 'csvs/'
+    pasta = 'backend/csvs'
     arquivos_csv = [os.path.join(pasta, f) for f in os.listdir(pasta) if f.endswith('.csv')]
 
     dfs = []
