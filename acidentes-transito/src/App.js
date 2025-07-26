@@ -145,21 +145,71 @@ function App() {
     if (!ref.current) return;
     if (instanceRef.current) instanceRef.current.destroy();
 
+    // Se cor for array, usa diretamente, senão repete cor única
+    const backgroundColors = Array.isArray(cor) ? cor : cor;
+    const borderColors = Array.isArray(cor) ? cor : cor;
+
+    const configBase = {
+      labels,
+      datasets: [
+        {
+          label,
+          data: dados,
+          backgroundColor: backgroundColors,
+          borderColor: borderColors,
+          borderWidth: 1,
+        },
+      ],
+    };
+
+    const optionsBase = getChartOptions(darkMode);
+
+    let specificOptions = {};
+
+    if (tipo === "horizontalBar") {
+      // Para barra horizontal no Chart.js 3+, use indexAxis 'y' e tipo 'bar'
+      specificOptions = {
+        indexAxis: "y",
+        ...optionsBase,
+        scales: {
+          x: {
+            beginAtZero: true,
+            ticks: { color: darkMode ? "white" : "black" },
+            grid: { color: darkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)" },
+          },
+          y: {
+            ticks: { color: darkMode ? "white" : "black" },
+            grid: { color: darkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)" },
+          },
+        },
+      };
+      tipo = "bar";
+    } else if (tipo === "doughnut" || tipo === "pie") {
+      // Remove escalas para pie/doughnut e mantém legend/tooltip
+      specificOptions = {
+        responsive: true,
+        plugins: {
+          tooltip: { enabled: true },
+          legend: {
+            position: "top",
+            labels: { color: darkMode ? "white" : "black" },
+          },
+          title: {
+            display: !!label,
+            text: label,
+            color: darkMode ? "white" : "black",
+            font: { size: 16, weight: "bold" },
+          },
+        },
+      };
+    } else {
+      specificOptions = optionsBase;
+    }
+
     instanceRef.current = new Chart(ref.current, {
       type: tipo,
-      data: {
-        labels,
-        datasets: [
-          {
-            label,
-            data: dados,
-            backgroundColor: cor,
-            borderColor: cor,
-            borderWidth: 1,
-          },
-        ],
-      },
-      options: getChartOptions(darkMode),
+      data: configBase,
+      options: specificOptions,
     });
   }
 
@@ -288,11 +338,8 @@ function App() {
     buscarDadosGraficos();
   }, []);
 
-  // Atualiza gráfico Previsão vs Real (você precisa fornecer série real e série previsão aqui, se quiser)
-  // Como você salva só previsões no Firebase, aqui deixei só a previsão histórica
-  // Se você tiver série real, precisa buscar e setar no estado também para mostrar no gráfico
+  // Atualiza gráfico Previsão vs Real (exemplo simples só com previsão)
   useEffect(() => {
-    // Para exemplo simples, vou criar gráfico só com valores previstos
     if (!previsoesHistorico.length) {
       if (instances.previsaoReal.current) {
         instances.previsaoReal.current.destroy();
@@ -346,7 +393,7 @@ function App() {
       criarGrafico(
         refs.ano,
         instances.ano,
-        "bar",
+        "line", // mudou para linha
         a.anos,
         a.valores,
         "Acidentes por Ano",
@@ -366,7 +413,7 @@ function App() {
       criarGrafico(
         refs.bairros,
         instances.bairros,
-        "bar",
+        "horizontalBar", // barra horizontal
         b.bairros,
         b.valores,
         "Top 10 Bairros",
@@ -376,7 +423,7 @@ function App() {
       criarGrafico(
         refs.hora,
         instances.hora,
-        "bar",
+        "line", // linha para hora
         h.horas.map((x) => `${x}h`),
         h.valores,
         "Acidentes por Hora",
@@ -386,21 +433,43 @@ function App() {
       criarGrafico(
         refs.tipo,
         instances.tipo,
-        "bar",
+        "bar", // doughnut
         t.tipos,
         t.valores,
         "Tipos de Acidente",
-        "rgba(255,99,132,0.8)"
+        [
+          "#FF6384",
+          "#36A2EB",
+          "#FFCE56",
+          "#4BC0C0",
+          "#9966FF",
+          "#FF9F40",
+          "#C9CBCF",
+          "#FF6666",
+          "#66FF66",
+          "#6666FF",
+        ]
       );
     if (n?.naturezas && n?.valores)
       criarGrafico(
         refs.natureza,
         instances.natureza,
-        "bar",
+        "bar", // pizza
         n.naturezas,
         n.valores,
         "Natureza",
-        "rgba(255,206,86,0.8)"
+        [
+          "#FF6384",
+          "#36A2EB",
+          "#FFCE56",
+          "#4BC0C0",
+          "#9966FF",
+          "#FF9F40",
+          "#C9CBCF",
+          "#FF6666",
+          "#66FF66",
+          "#6666FF",
+        ]
       );
     if (v?.tipos && v?.valores)
       criarGrafico(
@@ -429,7 +498,11 @@ function App() {
   }, [dadosGraficos, darkMode]);
 
   return (
-    <div className={`container-fluid py-4 ${darkMode ? "bg-dark text-light" : "bg-light"}`}>
+    <div
+      className={`container-fluid py-4 ${
+        darkMode ? "bg-dark text-light" : "bg-light"
+      }`}
+    >
       <div className="text-center mb-4">
         <h1 className="display-5 fw-bold">📊 Previsão de Acidentes de Trânsito</h1>
         <button
@@ -440,96 +513,174 @@ function App() {
         </button>
       </div>
 
-      {loading && <div className="alert alert-secondary text-center">Carregando…</div>}
+      {loading && (
+        <div className="alert alert-secondary text-center">Carregando…</div>
+      )}
       {error && <div className="alert alert-danger text-center">{error}</div>}
 
       {previsaoProximoDia !== null && (
         <div className="alert alert-info text-center fs-6">
-          📅 (Treino/Teste) Próximo dia após fim da base: <strong>{previsaoProximoDia}</strong>
+          📅 (Treino/Teste) Próximo dia após fim da base:{" "}
+          <strong>{previsaoProximoDia}</strong>
         </div>
       )}
 
       {/* Gráfico Previsão (só previsão do Firebase) + Erros */}
       {previsoesHistorico.length > 0 && (
-  <div className={`card mb-4 shadow ${darkMode ? "bg-secondary text-light" : ""}`}>
-    <div className="card-header fw-semibold fs-5">📈 Previsão</div>
-    <div className="card-body" style={{ maxHeight: "400px", overflowY: "auto" }}>
-      <canvas ref={refs.previsaoReal} style={{ maxHeight: "250px", width: "100%" }} />
-      
-      {errosModelo && (
-        <table className={`table mt-3 ${darkMode ? "table-dark" : ""}`}>
-          <thead>
-            <tr>
-              <th>Erro</th>
-              <th>Valor</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>MAE</td>
-              <td>{Number(errosModelo.MAE ?? errosModelo["MAE"])?.toFixed(4)}</td>
-            </tr>
-            <tr>
-              <td>MSE</td>
-              <td>{Number(errosModelo.MSE ?? errosModelo["MSE"])?.toFixed(4)}</td>
-            </tr>
-            <tr>
-              <td>RMSE</td>
-              <td>{Number(errosModelo.RMSE ?? errosModelo["RMSE"])?.toFixed(4)}</td>
-            </tr>
-            <tr>
-              <td>MAPE (%)</td>
-              <td>{Number(errosModelo["MAPE (%)"] ?? errosModelo.MAPE)?.toFixed(2)}%</td>
-            </tr>
-          </tbody>
-        </table>
+        <div className={`card mb-4 shadow ${darkMode ? "bg-secondary text-light" : ""}`}>
+          <div className="card-header fw-semibold fs-5">📈 Previsão</div>
+          <div
+            className="card-body"
+            style={{ maxHeight: "400px", overflowY: "auto" }}
+          >
+            <canvas
+              ref={refs.previsaoReal}
+              style={{ maxHeight: "250px", width: "100%" }}
+            />
+
+            {errosModelo && (
+              <table className={`table mt-3 ${darkMode ? "table-dark" : ""}`}>
+                <thead>
+                  <tr>
+                    <th>Erro</th>
+                    <th>Valor</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>MAE</td>
+                    <td>
+                      {Number(errosModelo.MAE ?? errosModelo["MAE"])?.toFixed(4)}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>MSE</td>
+                    <td>
+                      {Number(errosModelo.MSE ?? errosModelo["MSE"])?.toFixed(4)}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>RMSE</td>
+                    <td>
+                      {Number(errosModelo.RMSE ?? errosModelo["RMSE"])?.toFixed(4)}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>SMAPE</td>
+                    <td>
+                      {Number(errosModelo.SMAPE ?? errosModelo["SMAPE"])?.toFixed(2)}%
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
       )}
 
-      <h5 className="mt-4">📅 Histórico das Previsões</h5>
-      <table className={`table ${darkMode ? "table-dark" : ""}`}>
-        <thead>
-          <tr>
-            <th>Data</th>
-            <th>Valor</th>
-          </tr>
-        </thead>
-        <tbody>
-          {previsoesHistorico.map((item, index) => (
-            <tr key={index}>
-              <td>{item.data ? new Date(item.data).toLocaleDateString("pt-BR") : "-"}</td>
-              <td>{item.valor}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  </div>
-)}
-
-
-      {/* Outros gráficos */}
-      <div className="row">
-        {[{ ref: refs.ano, title: "Acidentes por Ano" },
-        { ref: refs.dia, title: "Acidentes por Dia" },
-        { ref: refs.bairros, title: "Top 10 Bairros" },
-        { ref: refs.hora, title: "Acidentes por Hora" },
-        { ref: refs.tipo, title: "Tipos de Acidente" },
-        { ref: refs.natureza, title: "Natureza" },
-        { ref: refs.veiculos, title: "Veículos Envolvidos" }].map((item, i) => (
-          <div key={i} className="col-md-6 mb-4">
-            <div className={`card shadow-sm h-100 ${darkMode ? "bg-secondary text-light" : ""}`}>
-              <div className="card-header fw-semibold">{item.title}</div>
-              <div className="card-body">
-                <canvas ref={item.ref} />
-              </div>
+      {/* Gráficos principais */}
+      <div className="row g-3">
+        <div className="col-12 col-md-6 col-lg-4">
+          <div
+            className={`card shadow h-100 ${
+              darkMode ? "bg-secondary text-light" : ""
+            }`}
+          >
+            <div className="card-header fw-semibold">📅 Acidentes por Ano</div>
+            <div className="card-body" style={{ height: "280px" }}>
+              <canvas ref={refs.ano} />
             </div>
           </div>
-        ))}
+        </div>
 
-        <div className="col-12 mb-5">
-          <div className={`card shadow border-0 ${darkMode ? "bg-secondary text-light" : ""}`}>
-            <div className="card-header fs-5 fw-semibold">🔥 Mapa de Calor</div>
-            <div className="card-body" style={{ height: "400px" }}>
+        <div className="col-12 col-md-6 col-lg-4">
+          <div
+            className={`card shadow h-100 ${
+              darkMode ? "bg-secondary text-light" : ""
+            }`}
+          >
+            <div className="card-header fw-semibold">📅 Acidentes por Dia</div>
+            <div className="card-body" style={{ height: "280px" }}>
+              <canvas ref={refs.dia} />
+            </div>
+          </div>
+        </div>
+
+        <div className="col-12 col-md-6 col-lg-4">
+          <div
+            className={`card shadow h-100 ${
+              darkMode ? "bg-secondary text-light" : ""
+            }`}
+          >
+            <div className="card-header fw-semibold">🏘️ Top 10 Bairros</div>
+            <div className="card-body" style={{ height: "320px" }}>
+              <canvas ref={refs.bairros} />
+            </div>
+          </div>
+        </div>
+
+        <div className="col-12 col-md-6 col-lg-4">
+          <div
+            className={`card shadow h-100 ${
+              darkMode ? "bg-secondary text-light" : ""
+            }`}
+          >
+            <div className="card-header fw-semibold">⏰ Acidentes por Hora</div>
+            <div className="card-body" style={{ height: "280px" }}>
+              <canvas ref={refs.hora} />
+            </div>
+          </div>
+        </div>
+
+        <div className="col-12 col-md-6 col-lg-4">
+          <div
+            className={`card shadow h-100 ${
+              darkMode ? "bg-secondary text-light" : ""
+            }`}
+          >
+            <div className="card-header fw-semibold">🚦 Tipos de Acidente</div>
+            <div className="card-body" style={{ height: "280px" }}>
+              <canvas ref={refs.tipo} />
+            </div>
+          </div>
+        </div>
+
+        <div className="col-12 col-md-6 col-lg-4">
+          <div
+            className={`card shadow h-100 ${
+              darkMode ? "bg-secondary text-light" : ""
+            }`}
+          >
+            <div className="card-header fw-semibold">📋 Natureza</div>
+            <div className="card-body" style={{ height: "280px" }}>
+              <canvas ref={refs.natureza} />
+            </div>
+          </div>
+        </div>
+
+        <div className="col-12 col-md-6 col-lg-4">
+          <div
+            className={`card shadow h-100 ${
+              darkMode ? "bg-secondary text-light" : ""
+            }`}
+          >
+            <div className="card-header fw-semibold">🚗 Veículos Envolvidos</div>
+            <div className="card-body" style={{ height: "280px" }}>
+              <canvas ref={refs.veiculos} />
+            </div>
+          </div>
+        </div>
+
+        <div className="col-12 col-md-6 col-lg-8">
+          <div
+            className={`card shadow h-100 ${
+              darkMode ? "bg-secondary text-light" : ""
+            }`}
+          >
+            <div className="card-header fw-semibold">
+              🔥 Mapa de Calor: Acidentes por Turno e Dia da Semana
+            </div>
+            <div className="card-body" style={{ height: "360px" }}>
               <canvas ref={refs.heatmap} />
             </div>
           </div>
