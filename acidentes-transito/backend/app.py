@@ -139,6 +139,18 @@ def avaliacao():
 def graficos():
     return jsonify(convert_np(dados_graficos))
 
+@app.route('/api/retrain', methods=['POST'])
+def retrain():
+    global cached_result
+    try:
+        df, _ = carregar_dados()
+        serie = df.groupby('data_unificada').size().asfreq('D')
+        cached_result = modelar_svr(serie)
+        salvar_previsoes_no_firebase()
+        return jsonify({'message': 'Modelo re-treinado com sucesso'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 @app.route('/')
 def home():
