@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "acidente-transito",
+  "private_key_id": "6b8475a89bd919f9eaa410e21dd52d1c6b5b274c",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDYZl2qE7vKrRMJ\n1ZBMnsnnhDeHNflKm3tKY4ASwG9SQcMcBb3IEL3o3r//pCdg9Ry3TvPaJUGGXp/l\nlj0lfqiqlZEM/tq00lBJEq4ZwoW6tIScQZilnKRmdLPlBUXlAts5Tl3UR1OalFFb\noRn3QMrv0tF8ngw0I3fywDa/ROSfCW2+GD6HGBvk03k4VKoUoE/4y/3r6eoZTmqn\nLgfs34KZqR4ICkHKLKaHH9Ijff1QxMubj5gKxhekPgu3pusqOY1U4bGsG0vUlfT2\nmmg1N+xa3mHuH9cMMVrXiqCeBl8ABLTvywzeOaZWJ2SYWXN3/ESNC60zCEXOf2jx\ngD/hsLiHAgMBAAECggEAGhF+0Am6Mh4BBfVsVtE8GP/ZoUKpv3M/z27GvhDgzYPE\nNBXRo7kMlPHHJvhzO/VbGmP68Tj9Yz6hPCA0noCFuK2gKx9vtkpYR0KQ/DkYMK0l\nWnN2fDYvVx5Q5ie+oJS5rEtvTIQJI2fMQzcC20EQEVg6nyyk41+wcpWgIrtzCmCj\ngOxGO/aptwC81o8QbZQRbt/jmUjoyJYUNQ9dZNV3Xl2vgR3/6iLlAn9GPq+zgauz\nYRzvxxKxyypw1x/loX5wNfxmDwupF7Gd4Beyc92qEFJWOTnyZ7YbiQiWKUdR2KWN\neNTN6Y/znDtIP77GeE7I1fC+qSVzv88mqZ6gbcQcPQKBgQDxS7G9uxO9AWng25SL\nzoOoBjdQQ+/pk5dFOOWslIbHINos0kMTKiDOinQ2PGnbxzBvKb1WjssAJ94PAR+H\nICV2s/WYrZNqLXiZWbCiN6aW6qsjMifhwMFjUquAsvrFuP5P7VnbpG4VumXWV/7K\nG11QGauKhjFHLQtFOCdgntA0OwKBgQDllkmKll2hBZB1MnxpoiCDr6G27gnmRf3P\nS/UEc9UYwcVoX0iWxL+I1+fswOB4PnfZ9N9luyzVIqpcrSqLzCnmM9INb6SJUUqx\nZS+wOZtHs2gnB1JbvYde4k3OMS21BkzN6u33URerTNQgMLlRU8KipeuJwaM6wFZn\n050mQxTEJQKBgCHQWbgc30c9S3kXTFnLNuf09wtoedZhuHEa6BSnO7vr/qcJUBz/\nalmHTYHMNYl3AHKThtT6bbg33gZ8Qc7N0nIwBdq/eEkI1j2nM/mHkvDTMehcvvoD\n6RXiH+aJLltG8VyCBnWhNUwWMu82pZ3s98ah0kg3RfCTf2DT3bDMkKDBAoGAEEzc\nSc+lNCJ+ACQmeyV8o3zbwW4jG8tKWuZsrfU/YvOW/XMOZ03uv1t85u1GwqLExZ/C\nIKnqY/ODHvNYevZy3xo8xqFvkCRKZk/l0+AzKyMMuQCnE0ZgjxcIKSSKtziMSW5t\nmMqUIKBiyypKbgDBZ+TZ1Tz/RtOTDuoSVT4cAlUCgYBabSK7HjcY8+AV0S55nzdU\n1FlbAB1o4+CYv1e2tEboVFDrfvhbJQBUNDQKJfH/U9sIuF3t72mcRLobMGVYU7C7\n82NZYAwwTkhZHk1WVtV50uA/9Bo0A3TJ82aIty1gKIlNgP1jfoYhv1RdTDNANCZv\nFoIKS1b7weuhbOxFqIVCew==\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-fbsvc@acidente-transito.iam.gserviceaccount.com",
+  "client_id": "102765207808573120565",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40acidente-transito.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

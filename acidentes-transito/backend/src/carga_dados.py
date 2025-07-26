@@ -1,10 +1,18 @@
 import pandas as pd
 import os
-from src.utils import tratar_dados  
+from src.utils import tratar_dados
 
 def carregar_dados():
     dados = {}
-    pasta = 'backend/csvs'
+
+    # Caminho absoluto para a pasta csvs
+    base_dir = os.path.dirname(os.path.abspath(__file__))  # backend/src
+    pasta = os.path.join(base_dir, '..', 'csvs')
+    pasta = os.path.abspath(pasta)
+
+    print(f"Lendo CSVs da pasta: {pasta}")
+
+    # Lista de arquivos CSV
     arquivos_csv = [os.path.join(pasta, f) for f in os.listdir(pasta) if f.endswith('.csv')]
 
     dfs = []
@@ -22,9 +30,11 @@ def carregar_dados():
     print(f'Total de registros: {df.shape[0]}')
 
     # TRATA O DATAFRAME
-    df = tratar_dados(df) 
+    df = tratar_dados(df)
 
- 
+    # ======================================
+    #    GERAÇÃO DOS DADOS PARA OS GRÁFICOS
+    # ======================================
     acidentes_ano = df['ano'].value_counts().sort_index()
     dados['acidentes_ano'] = {'anos': acidentes_ano.index.tolist(), 'valores': acidentes_ano.values.tolist()}
 
