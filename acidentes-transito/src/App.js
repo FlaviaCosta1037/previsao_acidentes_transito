@@ -43,7 +43,6 @@ function App() {
   const [dadosGraficos, setDadosGraficos] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
 
-  // Refs para canvas dos gráficos
   const refs = {
     ano: useRef(null),
     dia: useRef(null),
@@ -56,7 +55,6 @@ function App() {
     previsaoReal: useRef(null),
   };
 
-  // Instâncias Chart.js para destruição antes de redesenhar
   const instances = {
     ano: useRef(null),
     dia: useRef(null),
@@ -145,7 +143,6 @@ function App() {
     if (!ref.current) return;
     if (instanceRef.current) instanceRef.current.destroy();
 
-    // Se cor for array, usa diretamente, senão repete cor única
     const backgroundColors = Array.isArray(cor) ? cor : cor;
     const borderColors = Array.isArray(cor) ? cor : cor;
 
@@ -167,7 +164,6 @@ function App() {
     let specificOptions = {};
 
     if (tipo === "horizontalBar") {
-      // Para barra horizontal no Chart.js 3+, use indexAxis 'y' e tipo 'bar'
       specificOptions = {
         indexAxis: "y",
         ...optionsBase,
@@ -185,7 +181,6 @@ function App() {
       };
       tipo = "bar";
     } else if (tipo === "doughnut" || tipo === "pie") {
-      // Remove escalas para pie/doughnut e mantém legend/tooltip
       specificOptions = {
         responsive: true,
         plugins: {
@@ -298,7 +293,6 @@ function App() {
     });
   }
 
-  // Busca dados do Firebase para previsões e erros
   useEffect(() => {
     async function buscarDadosFirebase() {
       setLoading(true);
@@ -338,7 +332,6 @@ function App() {
     buscarDadosGraficos();
   }, []);
 
-  // Atualiza gráfico Previsão vs Real (exemplo simples só com previsão)
   useEffect(() => {
     if (!previsoesHistorico.length) {
       if (instances.previsaoReal.current) {
@@ -377,7 +370,6 @@ function App() {
     });
   }, [previsoesHistorico, darkMode]);
 
-  // Atualiza demais gráficos
   useEffect(() => {
     if (!dadosGraficos) return;
 
@@ -413,7 +405,7 @@ function App() {
       criarGrafico(
         refs.bairros,
         instances.bairros,
-        "horizontalBar", // barra horizontal
+        "horizontalBar", 
         b.bairros,
         b.valores,
         "Top 10 Bairros",

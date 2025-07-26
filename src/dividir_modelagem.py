@@ -21,3 +21,14 @@ def dividir_modelagem(serie, proporcao_treino=0.6, proporcao_val=0.2):
     print(f"Tamanho Treino: {len(y_train)}, Validação: {len(y_val)}, Teste: {len(y_test)}")
 
     return y_train, y_val, y_test
+
+def dividir_modelagem_2(serie, proporcao_treino=0.7):
+    n = len(serie)
+    train_size = int(n * proporcao_treino)
+
+    y_train = serie.iloc[:train_size].copy()
+    y_test = serie.iloc[train_size:].copy()
+
+    print(f"Tamanho Treino: {len(y_train)}, Teste: {len(y_test)}")
+
+    return y_train, y_test

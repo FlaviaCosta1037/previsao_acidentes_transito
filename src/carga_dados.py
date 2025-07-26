@@ -1,5 +1,7 @@
 import pandas as pd
 import os
+print(os.getcwd())
+
 
 def carregar_dados():
     pasta = 'csvs/'
